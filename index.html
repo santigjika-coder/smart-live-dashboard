@@ -44,6 +44,7 @@ canvas{
 <body>
 
 <h1>Smart Solar Bench - Live Dashboards</h1>
+<h2 id="globalStatus"></h2>
 
 <div class="container">
 
@@ -51,24 +52,28 @@ canvas{
 <h3>Temperatura (°C)</h3>
 <canvas id="tempGauge" width="200" height="200"></canvas>
 <p id="tempValue"></p>
+<p id="tempStatus"></p>
 </div>
 
 <div class="card">
 <h3>Lagështia (%)</h3>
 <canvas id="humGauge" width="200" height="200"></canvas>
 <p id="humValue"></p>
+<p id="humStatus"></p>
 </div>
 
 <div class="card">
 <h3>Presioni Atmosferik (hPa)</h3>
 <canvas id="presGauge" width="200" height="200"></canvas>
 <p id="presValue"></p>
+<p id="presStatus"></p>
 </div>
 
 <div class="card">
 <h3>Cilësia e Ajrit (kΩ)</h3>
 <canvas id="gasGauge" width="200" height="200"></canvas>
 <p id="gasValue"></p>
+<p id="gasStatus"></p>
 </div>
 
 </div>
@@ -96,6 +101,75 @@ document.getElementById("tempValue").innerHTML = t + " °C";
 document.getElementById("humValue").innerHTML = h + " %";
 document.getElementById("presValue").innerHTML = p + " hPa";
 document.getElementById("gasValue").innerHTML = g + " kΩ";
+
+// TEMPERATURE INTERPRETATION
+if(t < 5){
+    document.getElementById("tempStatus").innerHTML = "Very cold conditions";
+}
+else if(t < 15){
+    document.getElementById("tempStatus").innerHTML = "Cold outdoor weather";
+}
+else if(t < 28){
+    document.getElementById("tempStatus").innerHTML = "Comfortable temperature";
+}
+else if(t < 35){
+    document.getElementById("tempStatus").innerHTML = "Warm conditions";
+}
+else{
+    document.getElementById("tempStatus").innerHTML = "Heat stress risk";
+}
+
+// HUMIDITY INTERPRETATION
+if(h < 30){
+    document.getElementById("humStatus").innerHTML = "Air is too dry";
+}
+else if(h <= 60){
+    document.getElementById("humStatus").innerHTML = "Ideal humidity level";
+}
+else if(h <= 75){
+    document.getElementById("humStatus").innerHTML = "Humid conditions";
+}
+else{
+    document.getElementById("humStatus").innerHTML = "Very humid - possible discomfort";
+}
+
+// PRESSURE INTERPRETATION
+if(p > 1015){
+    document.getElementById("presStatus").innerHTML = "Stable weather expected";
+}
+else if(p >= 1005){
+    document.getElementById("presStatus").innerHTML = "Normal atmospheric pressure";
+}
+else if(p >= 990){
+    document.getElementById("presStatus").innerHTML = "Unstable weather - possible rain";
+}
+else{
+    document.getElementById("presStatus").innerHTML = "Storm system likely";
+}
+
+// GAS / AIR QUALITY INTERPRETATION
+if(g > 100){
+    document.getElementById("gasStatus").innerHTML = "Air quality is excellent";
+}
+else if(g > 60){
+    document.getElementById("gasStatus").innerHTML = "Air quality is good";
+}
+else if(g > 40){
+    document.getElementById("gasStatus").innerHTML = "Air quality is moderate";
+}
+else{
+    document.getElementById("gasStatus").innerHTML = "Air pollution detected";
+}
+
+if(g > 100 && h <= 60 && t < 30){
+    document.getElementById("globalStatus").innerHTML = "Environmental conditions are optimal";
+}
+else if(g < 40){
+    document.getElementById("globalStatus").innerHTML = "Air quality warning in the park";
+}
+else{
+    document.getElementById("globalStatus").innerHTML = "Environmental conditions are acceptable";
+}
 
 createGauge("tempGauge",0,50,t);
 createGauge("humGauge",0,100,h);
