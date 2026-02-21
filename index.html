@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Smart Solar Bench - Berat</title>
+<meta http-equiv="refresh" content="15">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gaugeJS/dist/gauge.min.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f3f5f7;
+    text-align:center;
+}
+h1{
+    margin-top:20px;
+    color:#0b7a75;
+}
+.container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+.card{
+    background:white;
+    width:250px;
+    margin:15px;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+canvas{
+    margin-top:10px;
+}
+.chart-container{
+    width:80%;
+    margin:40px auto;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Smart Solar Bench - Berat Park</h1>
+
+<div class="container">
+
+<div class="card">
+<h3>Temperature (°C)</h3>
+<canvas id="tempGauge" width="200" height="200"></canvas>
+<p id="tempValue"></p>
+</div>
+
+<div class="card">
+<h3>Humidity (%)</h3>
+<canvas id="humGauge" width="200" height="200"></canvas>
+<p id="humValue"></p>
+</div>
+
+<div class="card">
+<h3>Pressure (hPa)</h3>
+<canvas id="presGauge" width="200" height="200"></canvas>
+<p id="presValue"></p>
+</div>
+
+<div class="card">
+<h3>Gas (kΩ)</h3>
+<canvas id="gasGauge" width="200" height="200"></canvas>
+<p id="gasValue"></p>
+</div>
+
+</div>
+
+<div class="chart-container">
+<canvas id="tempChart"></canvas>
+</div>
+
+<script>
+
+async function loadData(){
+
+const response = await fetch("https://api.thingspeak.com/channels/3255086/feeds.json?results=20");
+const data = await response.json();
+
+const feeds = data.feeds;
+const latest = feeds[feeds.length-1];
+
+let t = parseFloat(latest.field1);
+let h = parseFloat(latest.field2);
+let p = parseFloat(latest.field3);
+let g = parseFloat(latest.field4);
+
+document.getElementById("tempValue").innerHTML = t + " °C";
+document.getElementById("humValue").innerHTML = h + " %";
+document.getElementById("presValue").innerHTML = p + " hPa";
+document.getElementById("gasValue").innerHTML = g + " kΩ";
+
+createGauge("tempGauge",0,50,t);
+createGauge("humGauge",0,100,h);
+createGauge("presGauge",950,1050,p);
+createGauge("gasGauge",0,200,g);
+
+createChart(feeds);
+
+}
+
+function createGauge(id,min,max,value){
+var opts = {
+  angle:0,
+  lineWidth:0.3,
+  radiusScale:1,
+  pointer:{
+    length:0.6,
+    strokeWidth:0.035
+  },
+  limitMax:false,
+  limitMin:false,
+  highDpiSupport:true
+};
+
+var target=document.getElementById(id);
+var gauge=new Gauge(target).setOptions(opts);
+gauge.maxValue=max;
+gauge.setMinValue(min);
+gauge.animationSpeed=32;
+gauge.set(value);
+}
+
+function createChart(feeds){
+let labels=feeds.map(f=>new Date(f.created_at).toLocaleTimeString());
+let temps=feeds.map(f=>f.field1);
+
+new Chart(document.getElementById("tempChart"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Temperature Trend",
+data:temps,
+fill:false
+}]
+}
+});
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
