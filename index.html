@@ -86,7 +86,7 @@ canvas{
 
 async function loadData(){
 
-const response = await fetch("https://api.thingspeak.com/channels/3255086/feeds.json?results=20");
+const response = await fetch("https://api.thingspeak.com/channels/3255086/feeds.json?minutes=200");
 const data = await response.json();
 
 const feeds = data.feeds;
@@ -204,26 +204,11 @@ gauge.set(value);
 
 function createChart(feeds){
 
-// Keep only one value every 10 minutes
-let filteredFeeds = [];
-let lastTime = 0;
-
-feeds.forEach(f => {
-    let currentTime = new Date(f.created_at).getTime();
-    
-    if(currentTime - lastTime >= 600000){ // 600000 ms = 10 minutes
-        filteredFeeds.push(f);
-        lastTime = currentTime;
-    }
-});
-
-// Labels
-let labels = filteredFeeds.map(f =>
+let labels = feeds.map(f =>
     new Date(f.created_at).toLocaleTimeString()
 );
 
-// Round temperature to nearest 0.5°C
-let temps = filteredFeeds.map(f => {
+let temps = feeds.map(f => {
     let value = parseFloat(f.field1);
     return Math.round(value * 2) / 2;
 });
@@ -233,7 +218,7 @@ new Chart(document.getElementById("tempChart"),{
     data:{
         labels:labels,
         datasets:[{
-            label:"Temperature Trend (10 min interval)",
+            label:"Temperature Trend",
             data:temps,
             fill:false
         }]
