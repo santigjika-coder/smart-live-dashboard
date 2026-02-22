@@ -203,20 +203,52 @@ gauge.set(value);
 }
 
 function createChart(feeds){
-let labels=feeds.map(f=>new Date(f.created_at).toLocaleTimeString());
-let temps=feeds.map(f=>f.field1);
+
+// Keep only one value every 10 minutes
+let filteredFeeds = [];
+let lastTime = 0;
+
+feeds.forEach(f => {
+    let currentTime = new Date(f.created_at).getTime();
+    
+    if(currentTime - lastTime >= 600000){ // 600000 ms = 10 minutes
+        filteredFeeds.push(f);
+        lastTime = currentTime;
+    }
+});
+
+// Labels
+let labels = filteredFeeds.map(f =>
+    new Date(f.created_at).toLocaleTimeString()
+);
+
+// Round temperature to nearest 0.5°C
+let temps = filteredFeeds.map(f => {
+    let value = parseFloat(f.field1);
+    return Math.round(value * 2) / 2;
+});
 
 new Chart(document.getElementById("tempChart"),{
-type:"line",
-data:{
-labels:labels,
-datasets:[{
-label:"Temperature Trend",
-data:temps,
-fill:false
-}]
-}
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            label:"Temperature Trend (10 min interval)",
+            data:temps,
+            fill:false
+        }]
+    },
+    options:{
+        scales:{
+            y:{
+                ticks:{
+                    stepSize:0.5
+                }
+            }
+        }
+    }
 });
+
 }
 
 loadData();
