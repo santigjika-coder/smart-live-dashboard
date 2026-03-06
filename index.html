@@ -107,13 +107,13 @@ let t = parseFloat(latest.field1);
 let h = parseFloat(latest.field2);
 let p = parseFloat(latest.field3);
 let g = parseFloat(latest.field4);
-let s = parseFloat(latest.field5);
+let db = parseFloat(latest.field5);
 
 document.getElementById("tempValue").innerHTML = t + " °C";
 document.getElementById("humValue").innerHTML = h + " %";
 document.getElementById("presValue").innerHTML = p + " hPa";
 document.getElementById("gasValue").innerHTML = g + " kΩ";
-document.getElementById("soundValue").innerHTML = s.toFixed(1) + " dB";
+document.getElementById("soundValue").innerHTML = db.toFixed(1) + " dB";
 
 // TEMPERATURE INTERPRETATION
 if(t < 5){
@@ -175,20 +175,20 @@ else{
 }
 
 // SOUND INTERPRETATION
-if(s < 40){
+if(db < 40){
     document.getElementById("soundStatus").innerHTML = "Very quiet environment";
 }
-else if(s < 55){
+else if(db < 55){
     document.getElementById("soundStatus").innerHTML = "Normal ambient noise";
 }
-else if(s < 70){
+else if(db < 70){
     document.getElementById("soundStatus").innerHTML = "Moderate noise level";
 }
-else if(s < 85){
-    document.getElementById("soundStatus").innerHTML = "Loud environment";
+else if(db < 85){
+    document.getElementById("soundStatus").innerHTML = "Loud - prolonged exposure not ideal";
 }
 else{
-    document.getElementById("soundStatus").innerHTML = "Noise pollution detected";
+    document.getElementById("soundStatus").innerHTML = "Harmful noise level!";
 }
 
 // GLOBAL STATUS
@@ -198,9 +198,6 @@ if(g > 100 && h <= 60 && t < 30){
 else if(g < 40){
     document.getElementById("globalStatus").innerHTML = "Air quality warning in the park";
 }
-else if(s >= 85){
-    document.getElementById("globalStatus").innerHTML = "Noise pollution warning in the park";
-}
 else{
     document.getElementById("globalStatus").innerHTML = "Environmental conditions are acceptable";
 }
@@ -209,7 +206,7 @@ createGauge("tempGauge", 0, 50, t);
 createGauge("humGauge", 0, 100, h);
 createGauge("presGauge", 950, 1050, p);
 createGauge("gasGauge", 0, 200, g);
-createGauge("soundGauge", 0, 120, s);
+createGauge("soundGauge", 30, 100, db);
 
 createTempChart(feeds);
 createSoundChart(feeds);
@@ -218,16 +215,16 @@ createSoundChart(feeds);
 
 function createGauge(id, min, max, value){
 var opts = {
-  angle:0,
-  lineWidth:0.3,
-  radiusScale:1,
+  angle: 0,
+  lineWidth: 0.3,
+  radiusScale: 1,
   pointer:{
-    length:0.6,
-    strokeWidth:0.035
+    length: 0.6,
+    strokeWidth: 0.035
   },
-  limitMax:false,
-  limitMin:false,
-  highDpiSupport:true
+  limitMax: false,
+  limitMin: false,
+  highDpiSupport: true
 };
 
 var target = document.getElementById(id);
@@ -247,23 +244,21 @@ let temps = feeds.map(f => {
     return Math.round(value * 2) / 2;
 });
 new Chart(document.getElementById("tempChart"),{
-    type:"line",
+    type: "line",
     data:{
-        labels:labels,
+        labels: labels,
         datasets:[{
-            label:"Temperature Trend (°C)",
-            data:temps,
-            fill:false,
-            borderColor:"#e74c3c",
-            tension:0.3
+            label: "Temperature Trend (°C)",
+            data: temps,
+            fill: false,
+            borderColor: "#e74c3c",
+            tension: 0.3
         }]
     },
     options:{
         scales:{
             y:{
-                ticks:{
-                    stepSize:0.5
-                }
+                ticks:{ stepSize: 0.5 }
             }
         }
     }
@@ -276,28 +271,26 @@ let labels = feeds.map(f =>
 );
 let sounds = feeds.map(f => {
     let value = parseFloat(f.field5);
-    return isNaN(value) ? 0 : parseFloat(value.toFixed(1));
+    return isNaN(value) ? null : parseFloat(value.toFixed(1));
 });
 new Chart(document.getElementById("soundChart"),{
-    type:"line",
+    type: "line",
     data:{
-        labels:labels,
+        labels: labels,
         datasets:[{
-            label:"Sound Level Trend (dB)",
-            data:sounds,
-            fill:false,
-            borderColor:"#8e44ad",
-            tension:0.3
+            label: "Noise Level Trend (dB)",
+            data: sounds,
+            fill: false,
+            borderColor: "#8e44ad",
+            tension: 0.3
         }]
     },
     options:{
         scales:{
             y:{
-                min:0,
-                max:120,
-                ticks:{
-                    stepSize:10
-                }
+                min: 30,
+                max: 100,
+                ticks:{ stepSize: 5 }
             }
         }
     }
