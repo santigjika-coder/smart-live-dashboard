@@ -76,10 +76,21 @@ canvas{
 <p id="gasStatus"></p>
 </div>
 
+<div class="card">
+<h3>Niveli i Zhurmës (dB)</h3>
+<canvas id="soundGauge" width="200" height="200"></canvas>
+<p id="soundValue"></p>
+<p id="soundStatus"></p>
+</div>
+
 </div>
 
 <div class="chart-container">
 <canvas id="tempChart"></canvas>
+</div>
+
+<div class="chart-container">
+<canvas id="soundChart"></canvas>
 </div>
 
 <script>
@@ -96,11 +107,13 @@ let t = parseFloat(latest.field1);
 let h = parseFloat(latest.field2);
 let p = parseFloat(latest.field3);
 let g = parseFloat(latest.field4);
+let s = parseFloat(latest.field5);
 
 document.getElementById("tempValue").innerHTML = t + " °C";
 document.getElementById("humValue").innerHTML = h + " %";
 document.getElementById("presValue").innerHTML = p + " hPa";
 document.getElementById("gasValue").innerHTML = g + " kΩ";
+document.getElementById("soundValue").innerHTML = s.toFixed(1) + " dB";
 
 // TEMPERATURE INTERPRETATION
 if(t < 5){
@@ -161,26 +174,49 @@ else{
     document.getElementById("gasStatus").innerHTML = "Air pollution detected";
 }
 
+// SOUND INTERPRETATION
+if(s < 40){
+    document.getElementById("soundStatus").innerHTML = "Very quiet environment";
+}
+else if(s < 55){
+    document.getElementById("soundStatus").innerHTML = "Normal ambient noise";
+}
+else if(s < 70){
+    document.getElementById("soundStatus").innerHTML = "Moderate noise level";
+}
+else if(s < 85){
+    document.getElementById("soundStatus").innerHTML = "Loud environment";
+}
+else{
+    document.getElementById("soundStatus").innerHTML = "Noise pollution detected";
+}
+
+// GLOBAL STATUS
 if(g > 100 && h <= 60 && t < 30){
     document.getElementById("globalStatus").innerHTML = "Environmental conditions are optimal";
 }
 else if(g < 40){
     document.getElementById("globalStatus").innerHTML = "Air quality warning in the park";
 }
+else if(s >= 85){
+    document.getElementById("globalStatus").innerHTML = "Noise pollution warning in the park";
+}
 else{
     document.getElementById("globalStatus").innerHTML = "Environmental conditions are acceptable";
 }
 
-createGauge("tempGauge",0,50,t);
-createGauge("humGauge",0,100,h);
-createGauge("presGauge",950,1050,p);
-createGauge("gasGauge",0,200,g);
+createGauge("tempGauge", 0, 50, t);
+createGauge("humGauge", 0, 100, h);
+createGauge("presGauge", 950, 1050, p);
+createGauge("gasGauge", 0, 200, g);
+createGauge("soundGauge", 0, 120, s);
 
-createChart(feeds);
+createTempChart(feeds);
+createSoundChart(feeds);
 
 }
 
-function createGauge(id,min,max,value){
+function createGauge(id, min, max, value){
 var opts = {
   angle:0,
   lineWidth:0.3,
@@ -194,33 +230,32 @@ var opts = {
   highDpiSupport:true
 };
 
-var target=document.getElementById(id);
-var gauge=new Gauge(target).setOptions(opts);
-gauge.maxValue=max;
+var target = document.getElementById(id);
+var gauge = new Gauge(target).setOptions(opts);
+gauge.maxValue = max;
 gauge.setMinValue(min);
-gauge.animationSpeed=32;
+gauge.animationSpeed = 32;
 gauge.set(value);
 }
 
-function createChart(feeds){
-
+function createTempChart(feeds){
 let labels = feeds.map(f =>
     new Date(f.created_at).toLocaleTimeString()
 );
-
 let temps = feeds.map(f => {
     let value = parseFloat(f.field1);
     return Math.round(value * 2) / 2;
 });
-
 new Chart(document.getElementById("tempChart"),{
     type:"line",
     data:{
         labels:labels,
         datasets:[{
-            label:"Temperature Trend",
+            label:"Temperature Trend (°C)",
             data:temps,
-            fill:false
+            fill:false,
+            borderColor:"#e74c3c",
+            tension:0.3
         }]
     },
     options:{
@@ -233,7 +268,40 @@ new Chart(document.getElementById("tempChart"),{
         }
     }
 });
+}
 
+function createSoundChart(feeds){
+let labels = feeds.map(f =>
+    new Date(f.created_at).toLocaleTimeString()
+);
+let sounds = feeds.map(f => {
+    let value = parseFloat(f.field5);
+    return isNaN(value) ? 0 : parseFloat(value.toFixed(1));
+});
+new Chart(document.getElementById("soundChart"),{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            label:"Sound Level Trend (dB)",
+            data:sounds,
+            fill:false,
+            borderColor:"#8e44ad",
+            tension:0.3
+        }]
+    },
+    options:{
+        scales:{
+            y:{
+                min:0,
+                max:120,
+                ticks:{
+                    stepSize:10
+                }
+            }
+        }
+    }
+});
 }
 
 loadData();
